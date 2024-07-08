@@ -6,7 +6,7 @@ in two steps:
 * **Configure**: Initial, one time only, configuration. Prepare a set of
   configuration files which may be subsequently used to orchestrate and adjust
 the desire build. Configuration files have been stored in the **src** folder.
-If these files are used skip straight to the [Build section](/README.md#build)
+If these files are used skip straight to the [Build section](/README.md#build).
 * **Build**: Use previously established configuration files to achieve a
   desired build.
 
@@ -246,7 +246,7 @@ cp ./tmp/config/images/Image ./src/Image
 cp ./tmp/config/images/rootfs.cpio.gz ./src/rootfs.cpio.gz
 ```
 
-Convert filesystem to uImage
+Convert filesystem to uImage:
 ```
 mkimage -A arm -O linux -T ramdisk -a 0x44000000 -C gzip -n "Build Root File System" -d rootfs.cpio.gz initramfs.uImage
 ```
@@ -270,32 +270,32 @@ tftpboot 0x46000000 daniel_initramfs.uImage
 booti 0x40480000 0x46000000 0x44000000
 ```
 
-# Usbip setup
+# USB/IP setup
 
 ## Set up server (maaxboard)
-Start the deamon in backgroun
+Start the deamon in the background:
 ```
 usbipd -D
 ```
-List the devices that can be shared
+List the devices that can be shared:
 ```
 usbip list -l
 ```
-Bind the device
+Bind the device:
 ```
 usbip bind -b <bus ID>
 ```
 ## Set up client (lithium)
-Load modules
+Load modules:
 ```
 sudo modprobe usbip-core
 sudo modprobe vhci-hcd
 ```
-Query the server
+Query the server:
 ```
 sudo usbip list -r <server ip>
 ```
-Attach device 
+Attach device:
 ```
 sudo usbip attach -r <server> -b <bus ID>
 ```
