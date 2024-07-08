@@ -144,3 +144,166 @@ coded, and we seek a portable (relative) configuration:
 cd tmp
 make -C ./buildroot-2024.02.1 O="${PWD}/config"
 ```
+### Configure Linux
+
+While the default build may be sufficient, it can be valuable to configure,
+control, and change this.
+
+Create complete default configuration for chosen architecture:
+```
+cd tmp
+make -C ./config/build/linux-6.6.22 ARCH=arm64 defconfig
+```
+
+This shall create:
+```
+./tmp/config/build/linux-6.6.22/.config`
+```
+
+Edit ".config" as appropriate. The following changes have been made:
+* Replace every "=m" with "=n", to avoid kernel modules.
+
+Add the following lines to compile usbip modules
+```
+CONFIG_USBIP_CORE=y
+CONFIG_USBIP_VHCI_HCD=y
+CONFIG_USBIP_HOST=y
+CONFIG_USBIP_DEBUG=y
+```
+
+Save as compact default configuration (defconfig):
+```
+cd tmp
+make -C ./config/build/linux-6.6.22 ARCH=arm64 savedefconfig
+```
+
+This shall create:
+```
+./tmp/config/build/linux-6.6.22/defconfig`
+```
+
+Retain this, as our linux configuration:
+```
+cp ./tmp/config/build/linux-6.6.22/defconfig ./src/linux.defconfig
+```
+
+Configure build root to use this configuration:
+```
+cd tmp
+make -C "${PWD}/buildroot-2024.02.1" O="${PWD}/config" menuconfig
+```
+
+Adjust buildroot configuration as follows:
+* Kernel::Linux Kernel::Kernel configuration (Using a custom (def)config file)
+* Kernel::Linux Kernel::Configuration file path (../config/linux.defconfig)
+
+Save the ".config" at the default location, which shall be within "config".
+
+Note that for Build Root, everything is relative to the location of its
+outermost Makefile. So, knowing this, we pick a suitable relative path
+("../config/linux.defconfig"). Keeping the entire configuration relative is
+deliberate and desirable to permit use in locations.
+
+### Configure Buildroot
+
+The Build Root configuration is huge, and we nearly entirely want to use the
+sensible normal defaults. So, frame in terms of this delta.
+
+Save compact default configuration (defconfig):
+```
+cd tmp
+make -C "${PWD}/buildroot-2024.02.1" O="${PWD}/config" savedefconfig
+```
+
+This will create:
+```
+./tmp/config/defconfig
+```
+
+Retain this, as our buildroot configuration:
+```
+cp ./tmp/config/defconfig ./src/buildroot.defconfig
+```
+
+### Clean
+
+It may be good to clean up:
+```
+make -C "${PWD}/buildroot-2024.02.1" O="${PWD}/config" clean
+```
+## Build
+
+Once we have configured, we may now build as follows:
+```
+mkdir tmp
+mkdir tmp/config
+cp ./src/buildroot.defconfig ./tmp/config/.config
+cp ./src/linux.defconfig ./tmp/config/linux.defconfig 
+cd tmp
+curl "https://buildroot.org/downloads/buildroot-2024.02.1.tar.gz" --output buildroot-2024.02.1.tar.gz
+tar -xf buildroot-2024.02.1.tar.gz
+make -C "buildroot-2024.02.1" O="../config" olddefconfig
+make -C "buildroot-2024.02.1" O="../config"
+```
+
+Retain the result:
+```
+cp ./tmp/config/images/Image ./src/Image
+cp ./tmp/config/images/rootfs.cpio.gz ./src/rootfs.cpio.gz
+```
+
+Convert filesystem to uImage
+```
+mkimage -A arm -O linux -T ramdisk -a 0x44000000 -C gzip -n "Build Root File System" -d rootfs.cpio.gz initramfs.uImage
+```
+
+## Build
+
+For investigation purposes, it can be valuable to locally modify the Linux
+kernel, and build from this locally modified version. This can be directly and
+efficiently orchestrated via the following:
+```
+make -C "buildroot-2024.02.1" O="../config" linux-build
+make -C "buildroot-2024.02.1" O="../config" linux-rebuild
+make -C "buildroot-2024.02.1" O="../config" linux-clean
+```
+
+# Run on maaxboard
+```
+tftpboot 0x40480000 daniel_linux.img
+tftpboot 0x44000000 bjemaaxboard.dtb
+tftpboot 0x46000000 daniel_initramfs.uImage
+booti 0x40480000 0x46000000 0x44000000
+```
+
+# Usbip setup
+
+## Set up server (maaxboard)
+Start the deamon in backgroun
+```
+usbipd -D
+```
+List the devices that can be shared
+```
+usbip list -l
+```
+Bind the device
+```
+usbip bind -b <bus ID>
+```
+## Set up client (lithium)
+Load modules
+```
+sudo modprobe usbip-core
+sudo modprobe vhci-hcd
+```
+Query the server
+```
+sudo usbip list -r <server ip>
+```
+Attach device 
+```
+sudo usbip attach -r <server> -b <bus ID>
+```
+
+
