@@ -1,1 +1,146 @@
-# maaxboard-linux
+# Build Root
+
+It is appropriate to use Build Root, to establish a specific configuration,
+that can subsequently be used to create the desired builds. This is achieved
+in two steps:
+* **Configure**: Initial, one time only, configuration. Prepare a set of
+  configuration files which may be subsequently used to orchestrate and adjust
+the desire build.
+* **Build**: Use previously established configuration files to achieve a
+  desired build.
+
+## Configure
+
+### Initialise
+
+Create a temporary area:
+```
+mkdir tmp 
+```
+
+Acquire Build Root:
+```
+cd tmp
+curl "https://buildroot.org/downloads/buildroot-2024.02.1.tar.gz" --output buildroot-2024.02.1.tar.gz
+tar -xf buildroot-2024.02.1.tar.gz
+rm -f buildroot-2024.02.1.tar.gz
+```
+
+Add usbip module to buildroot
+```
+cd tmp
+mdkir buildroot-2024.02.1/package/linux-tools/linux-tool-usbip.mk.in
+echo
+"
+################################################################################
+#
+# usbip
+#
+################################################################################
+
+LINUX_TOOLS += usbip
+
+USBIP_DEPENDENCIES = udev
+USBIP_CONF_OPTS = --with-tcp-wrappers=no
+
+define USBIP_BUILD_CMDS
+ $(Q)if test ! -f $(LINUX_DIR)/tools/usb/usbip/Makefile.am ; then \
+ echo "Your kernel version is too old and does not have the usbip tool." ; \
+ echo "At least kernel 3.17 must be used." ; \
+ exit 1 ; \
+ fi
+
+ cd $(LINUX_DIR)/tools/usb/usbip && PATH=$(BR_PATH) ./autogen.sh
+
+ cd $(LINUX_DIR)/tools/usb/usbip && rm -rf config.cache && \
+ $(TARGET_CONFIGURE_OPTS) \
+ $(TARGET_CONFIGURE_ARGS) \
+ $(USBIP_CONF_ENV) \
+ CONFIG_SITE=/dev/null \
+ ./configure \
+ --target=$(GNU_TARGET_NAME) \
+ --host=$(GNU_TARGET_NAME) \
+ --build=$(GNU_HOST_NAME) \
+ --prefix=/usr \
+ --exec-prefix=/usr \
+ --sysconfdir=/etc \
+ --localstatedir=/var \
+ --program-prefix="" \
+ $(QUIET) $(USBIP_CONF_OPTS)
+
+ $(TARGET_MAKE_ENV) $(MAKE) $(USBIP_MAKE_OPTS) \
+ -C $(LINUX_DIR)/tools/usb/usbip/
+endef
+
+# for libusbip
+define USBIP_INSTALL_STAGING_CMDS
+ $(TARGET_MAKE_ENV) $(MAKE) -C $(LINUX_DIR)/tools/usb/usbip \
+ $(USBIP_MAKE_OPTS) \
+ DESTDIR=$(STAGING_DIR) \
+ install
+endef
+
+define USBIP_INSTALL_TARGET_CMDS
+ $(TARGET_MAKE_ENV) $(MAKE) -C $(LINUX_DIR)/tools/usb/usbip \
+ $(USBIP_MAKE_OPTS) \
+ DESTDIR=$(TARGET_DIR) \
+ install
+endef" > linux-tool-usbip.mk.in
+```
+Add this text to Config.in
+```
+config BR2_PACKAGE_LINUX_TOOLS_USBIP
+ bool "usbip"
+ depends on BR2_PACKAGE_HAS_UDEV
+ depends on BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_17 # moved out of staging/ dir in kernel 3.17
+ select BR2_PACKAGE_LINUX_TOOLS
+ help
+ USB/IP protocol allows to pass USB device from server to client over
+ the network.
+ You need to activate support for it in your kernel configuration.
+
+ This (usbip) is the set of userspace tools used to handle connection
+ and management.
+
+ You can optionally add hwdata package to your BR config to have
+ better runtime experience.
+
+ https://github.com/torvalds/linux/blob/master/tools/usb/usbip/README
+
+comment "usbip needs udev /dev management and a toolchain w/ headers >= 3.17"
+ depends on !BR2_PACKAGE_HAS_UDEV || !BR2_TOOLCHAIN_HEADERS_AT_LEAST_3_17
+ ```
+
+
+Configure build root:
+```
+cd tmp
+mkdir config
+make -C ./buildroot-2024.02.1 O="${PWD}/config" menuconfig
+```
+
+Note that Build Root creates content in "config", including a Makefile. Be
+aware that, somewhat annoyingly, this Makefile is hard coded to this specific
+Build Root instance. A sensible starting point is to select the most minimum
+default configuration:
+* Target Options::Target Architecture (AArch64 (little endian))
+* Toolchain::Toolchain type (External toolchain)
+* System configuration::/dev management (Dynamic using devtmpfs + eudev)::Dynamic using devtmpfs + eudev
+* Kernel::Linux Kernel
+* Kernel::Linux Kernel::Kernel configuration (Use the architecture default configuration)
+* Kernel::Linux Kernel Tools::usbip
+* Filesystem images::cpio the root filesystem (for use as an initial RAM filesystem)
+* Filesystem images::cpio the root filesystem::Compression method (gzip)
+
+Save the ".config" at the default location, which shall be within "config".
+
+### Build
+
+At this point, a full build is possible. This is helpful, as it will pull in
+all needed items, such as the toolchain, and the Linux Kernel. While there is
+a Makefile within "config" we are choosing to ignore this, as it is hard
+coded, and we seek a portable (relative) configuration:
+```
+cd tmp
+make -C ./buildroot-2024.02.1 O="${PWD}/config"
+```
