@@ -5,7 +5,8 @@ that can subsequently be used to create the desired builds. This is achieved
 in two steps:
 * **Configure**: Initial, one time only, configuration. Prepare a set of
   configuration files which may be subsequently used to orchestrate and adjust
-the desire build.
+the desire build. Configuration files have been stored in the **src** folder.
+If these files are used skip straight to the [Build section](/maaxboard-linux/README.md#build)
 * **Build**: Use previously established configuration files to achieve a
   desired build.
 
@@ -13,25 +14,18 @@ the desire build.
 
 ### Initialise
 
-Create a temporary area:
-```
-mkdir tmp 
-```
+#### Acquire Build Root
 
-Acquire Build Root:
 ```
-cd tmp
 curl "https://buildroot.org/downloads/buildroot-2024.02.1.tar.gz" --output buildroot-2024.02.1.tar.gz
 tar -xf buildroot-2024.02.1.tar.gz
 rm -f buildroot-2024.02.1.tar.gz
 ```
 
-Add usbip module to buildroot
+#### Add usbip module to buildroot
+
+Create a file named **linux-tool-usbip.mk.in** with the following text in this folder **buildroot-2024.02.1/package/linux-tools**:
 ```
-cd tmp
-mdkir buildroot-2024.02.1/package/linux-tools/linux-tool-usbip.mk.in
-echo
-"
 ################################################################################
 #
 # usbip
@@ -85,9 +79,9 @@ define USBIP_INSTALL_TARGET_CMDS
  $(USBIP_MAKE_OPTS) \
  DESTDIR=$(TARGET_DIR) \
  install
-endef" > linux-tool-usbip.mk.in
+endef
 ```
-Add this text to Config.in
+Add this text to Config.in:
 ```
 config BR2_PACKAGE_LINUX_TOOLS_USBIP
  bool "usbip"
@@ -112,9 +106,9 @@ comment "usbip needs udev /dev management and a toolchain w/ headers >= 3.17"
  ```
 
 
-Configure build root:
+#### Configure build root
+
 ```
-cd tmp
 mkdir config
 make -C ./buildroot-2024.02.1 O="${PWD}/config" menuconfig
 ```
@@ -134,7 +128,7 @@ default configuration:
 
 Save the ".config" at the default location, which shall be within "config".
 
-### Build
+### Build buildroot
 
 At this point, a full build is possible. This is helpful, as it will pull in
 all needed items, such as the toolchain, and the Linux Kernel. While there is
@@ -257,7 +251,7 @@ Convert filesystem to uImage
 mkimage -A arm -O linux -T ramdisk -a 0x44000000 -C gzip -n "Build Root File System" -d rootfs.cpio.gz initramfs.uImage
 ```
 
-## Build
+## Rebuild
 
 For investigation purposes, it can be valuable to locally modify the Linux
 kernel, and build from this locally modified version. This can be directly and
