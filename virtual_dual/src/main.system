@@ -45,7 +45,7 @@
 
     <!-- VMM 1 -->
     <protection_domain name="CLIENT_VMM-1" priority="55">
-        <program_image path="client_vmm_1.elf" />
+        <program_image path="server_vmm.elf" />
         <map mr="client_vm_ram_1" vaddr="0x40000000" perms="rw" setvar_vaddr="guest_ram_vaddr" />
 
         <map mr="tx_queue_serial_vmm_1" vaddr="0x6000000" perms="rw" cached="true" setvar_vaddr="serial_tx_queue" />
@@ -72,7 +72,7 @@
 
     <!-- VMM 2 -->
     <protection_domain name="CLIENT_VMM-2" priority="50">
-        <program_image path="client_vmm_2.elf" />
+        <program_image path="client_vmm.elf" />
         <map mr="client_vm_ram_2" vaddr="0x40000000" perms="rw" setvar_vaddr="guest_ram_vaddr" />
 
         <map mr="tx_queue_serial_vmm_2" vaddr="0x6000000" perms="rw" cached="true" setvar_vaddr="serial_tx_queue" />
