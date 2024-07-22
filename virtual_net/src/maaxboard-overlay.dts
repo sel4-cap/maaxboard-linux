@@ -24,7 +24,7 @@
 
     memory@40000000 {
         device_type = "memory";
-        reg = <0x00 0x40000000 0x00 0x9000000>;
+        reg = <0x00 0x40000000 0x00 0x18000000>;
     };
 
     /delete-node/ reserved-memory;
@@ -118,8 +118,8 @@
 
     chosen {
         stdout-path = "/soc@0/bus@30800000/serial@30860000";
-        linux,initrd-start = <0x00000000 0x44500000>;
-        linux,initrd-end =   <0x00000000 0x47000000>;
+        linux,initrd-start = <0x00000000 0x54500000>;
+        linux,initrd-end =   <0x00000000 0x58000000>;
         /* nosmp: Ensure single core. */
         bootargs = "nosmp";
     };

@@ -3,7 +3,7 @@
     <!-- Primary -->
     <memory_region name="ethernet" size="0x10000" phys_addr="0x30be0000" />
     <memory_region name="gic_vcpu" size="0x1000" phys_addr="0x31020000" />
-    <memory_region name="guest_ram" size="0x9000000" page_size="0x200000" />
+    <memory_region name="guest_ram" size="0x18000000" page_size="0x200000" />
     <memory_region name="uart" size="0x10000" phys_addr="0x30860000" />
 
     <!-- Secondary -->
@@ -15,6 +15,12 @@
     <memory_region name="pinctrl" size="0x10000" phys_addr="0x30330000" /> 
     <memory_region name="syscon" size="0x10000" phys_addr="0x30360000" />
     <memory_region name="timer" size="0x20000" phys_addr="0x306a0000" />
+    <memory_region name="dma-controller" size="0x1000" phys_addr="0x302c0000"/>
+    <memory_region name="tmu" size="0x10000" phys_addr="0x30260000"/>
+    <memory_region name="dma_controller2" size="0x10000" phys_addr="0x30bd0000"/>
+    <memory_region name="pwm" size="0x10000" phys_addr="0x30660000"/>
+    <memory_region name="caam_snvs" size="0x10000" phys_addr="0x30370000"/>
+    <memory_region name="crypto" size="0x40000" phys_addr="0x30900000"/>
 
     <protection_domain name="VMM" priority="254">
         <program_image path="vxhci.elf" />
@@ -35,6 +41,12 @@
             <map mr="pinctrl" vaddr="0x30330000" perms="rw" cached="false" />
             <map mr="syscon" vaddr="0x30360000" perms="rw" cached="false" />
             <map mr="timer" vaddr="0x306a0000" perms="rw" cached="false" />
+            <map mr="dma-controller" vaddr="0x302c0000" perms="rw" cached="false"/>
+            <map mr="tmu" vaddr="0x30260000" perms="rw" cached="false"/>
+            <map mr="dma_controller2" vaddr="0x30bd0000" perms="rw" cached="false"/>	    
+            <map mr="pwm" vaddr="0x30660000" perms="rw" cached="false"/>
+            <map mr="caam_snvs" vaddr="0x30370000" perms="rw" cached="false"/>
+            <map mr="crypto" vaddr="0x30900000" perms="rw" cached="false"/>
         </virtual_machine>
         <irq irq="58" id="1" />
     </protection_domain>

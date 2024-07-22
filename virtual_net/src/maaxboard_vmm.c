@@ -28,8 +28,8 @@
  * simple user-space, 0x10000000 bytes (256MB) is plenty.
  */
 
-#define GUEST_INIT_RAM_DISK_VADDR 0x44500000
-#define GUEST_DTB_VADDR           0x44000000
+#define GUEST_INIT_RAM_DISK_VADDR 0x54500000
+#define GUEST_DTB_VADDR           0x54000000
 
 /* For simplicity we just enforce the serial IRQ channel number to be the same
  * across platforms. */
