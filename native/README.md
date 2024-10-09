@@ -6,7 +6,7 @@ in two steps:
 * **Configure**: Initial, one time only, configuration. Prepare a set of
   configuration files which may be subsequently used to orchestrate and adjust
 the desire build. Configuration files have been stored in the **src** folder.
-If these files are used skip straight to the [Build section](/README.md#build).
+If these files are used skip straight to the [Build section](README.md#build).
 * **Build**: Use previously established configuration files to achieve a
   desired build.
 
