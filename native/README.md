@@ -14,6 +14,11 @@ If these files are used skip straight to the [Build section](/README.md#build).
 
 ### Initialise
 
+Create a temporary area:
+```
+mkdir tmp 
+```
+
 #### Acquire Build Root
 
 ```
